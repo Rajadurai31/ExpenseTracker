@@ -17,8 +17,13 @@ public class Main {
             System.exit(1);
         }
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+
         SwingUtilities.invokeLater(() -> {
-            new MainGUI().setVisible(true);
+            try {
+                new MainGUI().setVisible(true);
+            }catch (Exception e){
+                System.err.println("Error starting the application "+e.getLocalizedMessage());
+            }
         });
     }
 }
