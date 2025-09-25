@@ -1,20 +1,23 @@
 package com.model;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 public class Expense {
     private int expenseId;
     private int categoryId;
     private double amount;
     private String paymentMethod;
-    private Date expenseDate;
+    private LocalDateTime expenseAt;
     private String note;
 
-    public Expense(int expenseId, int categoryId, double amount, String paymentMethod, Date expenseDate, String note) {
+    public Expense(){
+        this.expenseAt = LocalDateTime.now();
+    }
+    public Expense(int expenseId, int categoryId, double amount, String paymentMethod, LocalDateTime expenseAt, String note) {
         this.expenseId = expenseId;
         this.categoryId = categoryId;
         this.amount = amount;
+        this.expenseAt=expenseAt;
         this.paymentMethod = paymentMethod;
-        this.expenseDate = expenseDate;
         this.note = note;
     }
 
@@ -50,12 +53,12 @@ public class Expense {
         this.paymentMethod = paymentMethod;
     }
 
-    public Date getExpenseDate() {
-        return expenseDate;
+    public LocalDateTime getExpenseAt() {
+        return expenseAt;
     }
 
-    public void setExpenseDate(Date expenseDate) {
-        this.expenseDate = expenseDate;
+    public void setExpenseAt() {
+        this.expenseAt = expenseAt;
     }
 
     public String getNote() {

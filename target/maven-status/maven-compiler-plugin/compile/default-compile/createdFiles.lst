@@ -1,4 +1,4 @@
-com\expense\dao\ExpenseDAO.class
+com\expense\dao\MainDAO.class
 com\expense\gui\CategoryGUI$1.class
 com\expense\gui\MainGUI.class
 com\model\Category.class
