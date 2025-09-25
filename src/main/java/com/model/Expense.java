@@ -21,6 +21,14 @@ public class Expense {
         this.note = note;
     }
 
+    public Expense(int categoryId, double amount, String paymentMethod, LocalDateTime expenseAt, String note) {
+        this.categoryId = categoryId;
+        this.amount = amount;
+        this.paymentMethod = paymentMethod;
+        this.expenseAt = expenseAt;
+        this.note = note;
+    }
+
     public int getExpenseId() {
         return expenseId;
     }

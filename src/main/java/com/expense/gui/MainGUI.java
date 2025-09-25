@@ -1,5 +1,6 @@
 package com.expense.gui;
 import com.expense.dao.MainDAO;
+import com.model.Category;
 import com.model.Expense;
 
 import javax.swing.*;
@@ -7,8 +8,10 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 public class MainGUI extends JFrame {
@@ -176,10 +179,116 @@ class ExpenseGUI extends JFrame{
         add(new JScrollPane(expenseTable), BorderLayout.CENTER);
     }
     private void setupEvenListeners(){
-//        addButton.addActionListener(e -> addExpense());
+        addButton.addActionListener(e -> addExpense());
 //        updateButton.addActionListener(e -> updateExpense());
 //        deleteButton.addActionListener(e -> deleteExpense());
     }
+    private void addExpense(){
+        try {
+            String categoryName = (String) categoryCombo.getSelectedItem();
+            String amountText = amountField.getText().trim();
+            if (categoryName == null || categoryName.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please select a category", "Validation Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            if (amountText.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please enter an amount", "Validation Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            int categoryId = MainDAO.getCategoryIdByName(categoryName);
+            double amount = Double.parseDouble(amountText);
+            String payment = (String) paymentCombo.getSelectedItem();
+            LocalDateTime expenseAt;
+            try {
+                expenseAt = LocalDateTime.parse(dateField.getText().trim());
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Invalid date format (use YYYY-MM-DD)", "Validation Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            String note = noteField.getText().trim();
+
+            Expense expense = new Expense(categoryId,amount,payment,expenseAt,note);
+            boolean success = mainDAO.addExpense(expense);
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Expense added successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
+
+                // Refresh table
+                List<Expense> expenses = mainDAO.getAllExpense();
+                updateTable(expenses);
+
+                // Clear fields
+                amountField.setText("");
+                noteField.setText("");
+                dateField.setText(LocalDate.now().toString());
+                paymentCombo.setSelectedIndex(0);
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to add expense", "Database Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }catch (Exception e){
+            JOptionPane.showMessageDialog(this,"Error: "+e.getMessage(),"DatabaseError",JOptionPane.ERROR_MESSAGE);
+        }
+    }
+//   private void updateExpense(){
+//        try {
+//            int row = expenseTable.getSelectedRow();
+//            if (row == -1) {
+//                JOptionPane.showMessageDialog(this, "Please select a row to update", "Validation Error", JOptionPane.WARNING_MESSAGE);
+//                return;
+//            }
+//            int expenseId = (int) tableModel.getValueAt(row, 0);
+//
+//            String categoryName = (String) categoryCombo.getSelectedItem();
+//            String amountText = amountField.getText().trim();
+//
+//            if (categoryName == null || categoryName.isEmpty()) {
+//                JOptionPane.showMessageDialog(this, "Please select a category", "Validation Error", JOptionPane.WARNING_MESSAGE);
+//                return;
+//            }
+//
+//            if (amountText.isEmpty()) {
+//                JOptionPane.showMessageDialog(this, "Please enter an amount", "Validation Error", JOptionPane.WARNING_MESSAGE);
+//                return;
+//            }
+//
+//            int categoryId = MainDAO.getCategoryIdByName(categoryName);
+//            double amount = Double.parseDouble(amountText);
+//            String payment = (String) paymentCombo.getSelectedItem();
+//
+//            LocalDateTime expenseAt;
+//            try {
+//                expenseAt = LocalDateTime.parse(dateField.getText().trim());
+//            } catch (Exception e) {
+//                JOptionPane.showMessageDialog(this, "Invalid date format (use YYYY-MM-DD)", "Validation Error", JOptionPane.WARNING_MESSAGE);
+//                return;
+//            }
+//
+//            String note = noteField.getText().trim();
+//
+//            Expense expense = new Expense(expenseId, categoryId, amount, payment, expenseAt, note);
+//
+//            boolean success = mainDAO.updateExpense(expense);
+//            if (success) {
+//                JOptionPane.showMessageDialog(this, "Expense updated successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
+//
+//                List<Expense> expenses = mainDAO.getAllExpense();
+//                updateTable(expenses);
+//
+//                amountField.setText("");
+//                noteField.setText("");
+//                dateField.setText(LocalDate.now().toString());
+//                paymentCombo.setSelectedIndex(0);
+//            } else {
+//                JOptionPane.showMessageDialog(this, "Failed to update expense", "Database Error", JOptionPane.ERROR_MESSAGE);
+//            }
+//        } catch (Exception e) {
+//            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+//        }
+//        }
+//
+//    }
+
     private void updateTable(List<Expense> expenses){
         tableModel.setRowCount(0);
         for(Expense e:expenses){
@@ -225,7 +334,7 @@ class ExpenseGUI extends JFrame{
 class CategoryGUI extends JFrame{
     private JTable categoryTable;
     private DefaultTableModel tableModel;
-
+    private MainDAO mainDAO;
     private JTextField nameField;
     private JTextField descriptionField;
 
@@ -233,10 +342,11 @@ class CategoryGUI extends JFrame{
     private JButton updateButton;
     private JButton deleteButton;
     public CategoryGUI(){
+        this.mainDAO = new MainDAO();
         initializeComponents();
         setupLayout();
         setupEvenListeners();
-        loadSelectedCategory();
+        loadCategory();
     }
     private void initializeComponents(){
         setTitle("Category Management");
@@ -293,6 +403,27 @@ class CategoryGUI extends JFrame{
 
         add(northPanel, BorderLayout.NORTH);
         add(new JScrollPane(categoryTable), BorderLayout.CENTER);
+    }
+    private  void loadCategory(){
+        try
+        {
+            List<Category> categories = mainDAO.getAllCategory();
+            updateTable(categories);
+        }
+        catch(SQLException e){
+            JOptionPane.showMessageDialog(this, "Error loading expenses: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    private void updateTable(List<Category>  categories){
+        tableModel.setRowCount(0);
+        for(Category e:categories){
+            Object[] row = {
+                    e.getCategoryId(),
+                    e.getName(),
+                    e.getDescription(),
+            };
+            tableModel.addRow(row);
+        }
     }
     private void loadSelectedCategory() {
         int row = categoryTable.getSelectedRow();
