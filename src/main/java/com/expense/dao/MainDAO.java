@@ -18,9 +18,9 @@ public class MainDAO {
         private static final String DELETE_EXPENSE = "DELETE FROM expenses WHERE expense_id=?";
 
         private static final String SELECT_ALL_CATEGORY = "select * from category";
-        private static final String INSERT_CATEGORY = "INSERT INTO categories(name, description) VALUES (?, ?)";
-        private static final String UPDATE_CATEGORY = "UPDATE categories SET name=?, description=? WHERE category_id=?";
-        private static final String DELETE_CATEGORY = "DELETE FROM categories WHERE category_id=?";
+        private static final String INSERT_CATEGORY = "INSERT INTO category(name, description) VALUES (?, ?)";
+        private static final String UPDATE_CATEGORY = "UPDATE category SET name=?, description=? WHERE category_id=?";
+        private static final String DELETE_CATEGORY = "DELETE FROM category WHERE category_id=?";
 
     public static int getCategoryIdByName(String categoryName) throws SQLException{
              try(Connection conn = DatabaseConnection.getDBConnection();
@@ -108,7 +108,7 @@ public class MainDAO {
 
 
 
-    public int createCategory(Category category) throws SQLException {
+    public int addCategory(Category category) throws SQLException {
 
         try (Connection conn = DatabaseConnection.getDBConnection();
              PreparedStatement stmt = conn.prepareStatement(INSERT_CATEGORY, Statement.RETURN_GENERATED_KEYS)) {
