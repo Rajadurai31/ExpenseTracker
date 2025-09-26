@@ -82,7 +82,7 @@ class ExpenseGUI extends JFrame{
     private JTable expenseTable;
     private DefaultTableModel tableModel;
     private MainDAO mainDAO;
-    private JComboBox<String> categoryCombo;
+    private JComboBox<Category> categoryCombo;
     private JTextField amountField;
     private JComboBox<String> paymentCombo;
     private JTextField dateField;
@@ -98,6 +98,7 @@ class ExpenseGUI extends JFrame{
         setupLayout();
         setupEvenListeners();
         loadExpenses();
+        loadCategoriesForExpense();
     }
     private void initializeComponents(){
         setTitle("Expense");
@@ -118,7 +119,23 @@ class ExpenseGUI extends JFrame{
             if (!e.getValueIsAdjusting())
                 loadSelectedExpense();
         });
-        categoryCombo = new JComboBox<>();
+        categoryCombo = new JComboBox<Category>() {
+            @Override
+            public String toString() {
+                Category cat = (Category) getSelectedItem();
+                return cat != null ? cat.getName() : "";
+            }
+        };
+        categoryCombo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof Category) {
+                    setText(((Category) value).getName());
+                }
+                return this;
+            }
+        });
         amountField = new JTextField(10);
         paymentCombo = new JComboBox<>(new String[]{"Cash", "Online", "Card", "UPI"});
         dateField = new JTextField(LocalDate.now().toString());
@@ -315,6 +332,16 @@ class ExpenseGUI extends JFrame{
             JOptionPane.showMessageDialog(this, "Error loading expenses: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+    private void loadCategoriesForExpense() {
+        try {
+            List<Category> categories = mainDAO.getAllCategory();
+            categoryCombo.removeAllItems();
+            categories.forEach(categoryCombo::addItem);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading categories: " + e.getMessage());
+        }
+    }
+
     private void loadSelectedExpense(){
         int row = expenseTable.getSelectedRow();
         if(row!=-1){
