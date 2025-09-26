@@ -197,8 +197,8 @@ class ExpenseGUI extends JFrame{
     }
     private void setupEvenListeners(){
         addButton.addActionListener(e -> addExpense());
-//        updateButton.addActionListener(e -> updateExpense());
-//        deleteButton.addActionListener(e -> deleteExpense());
+       updateButton.addActionListener(e -> updateExpense());
+       deleteButton.addActionListener(e -> deleteExpense());
     }
     private void addExpense(){
         try {
@@ -216,9 +216,9 @@ class ExpenseGUI extends JFrame{
             int categoryId = categoryName.getCategoryId();
             double amount = Double.parseDouble(amountText);
             String payment = (String) paymentCombo.getSelectedItem();
-            LocalDateTime expenseAt;
+            LocalDate expenseAt;
             try {
-                expenseAt = LocalDateTime.parse(dateField.getText().trim());
+                expenseAt = LocalDate.parse(dateField.getText().trim());
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Invalid date format (use YYYY-MM-DD)", "Validation Error", JOptionPane.WARNING_MESSAGE);
                 return;
@@ -247,9 +247,97 @@ class ExpenseGUI extends JFrame{
             JOptionPane.showMessageDialog(this,"Error: "+e.getMessage(),"DatabaseError",JOptionPane.ERROR_MESSAGE);
         }
     }
+    private void updateExpense(){
+        int row = expenseTable.getSelectedRow();
+        if(row==-1){
+            JOptionPane.showMessageDialog(this, "Please select an expense to update", "Validation Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try {
+            Category categoryName = (Category) categoryCombo.getSelectedItem();
+            String amountText = amountField.getText().trim();
+            if (categoryName == null ) {
+                JOptionPane.showMessageDialog(this, "Please select a category", "Validation Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
 
+            if (amountText.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please enter an amount", "Validation Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            int categoryId = categoryName.getCategoryId();
+            double amount = Double.parseDouble(amountText);
+            String payment = (String) paymentCombo.getSelectedItem();
+            LocalDate expenseAt;
+            try {
+                expenseAt = LocalDate.parse(dateField.getText().trim());
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Invalid date format (use YYYY-MM-DD)", "Validation Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
 
+            String note = noteField.getText().trim();
+            int expenseId = (int) tableModel.getValueAt(row, 0);
 
+            Expense expense = new Expense(expenseId,categoryId,amount,payment,expenseAt,note);
+            boolean success = mainDAO.updateExpense(expense);
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Expense updated successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
+
+                // Refresh table
+                List<Expense> expenses = mainDAO.getAllExpense();
+                updateTable(expenses);
+
+                // Clear fields
+                amountField.setText("");
+                noteField.setText("");
+                dateField.setText(LocalDate.now().toString());
+                paymentCombo.setSelectedIndex(0);
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to update expense", "Database Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }catch (Exception e){
+            JOptionPane.showMessageDialog(this,"Error: "+e.getMessage(),"DatabaseError",JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+       private void deleteExpense(){
+            int row = expenseTable.getSelectedRow();
+            if(row==-1){
+                JOptionPane.showMessageDialog(this, "Please select an expense to delete", "Validation Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Are you sure you want to delete this expense?",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION);
+            if(confirm==JOptionPane.YES_OPTION){
+                try {
+                    int expenseId = (int) tableModel.getValueAt(row, 0);
+                    Expense expense = new Expense();
+                    expense.setExpenseId(expenseId);
+                    boolean success = mainDAO.deleteExpense(expense);
+                    if (success) {
+                        JOptionPane.showMessageDialog(this, "Expense deleted successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
+
+                        // Refresh table
+                        List<Expense> expenses = mainDAO.getAllExpense();
+                        updateTable(expenses);
+
+                        // Clear fields
+                        amountField.setText("");
+                        noteField.setText("");
+                        dateField.setText(LocalDate.now().toString());
+                        paymentCombo.setSelectedIndex(0);
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Failed to delete expense", "Database Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }catch (Exception e){
+                    JOptionPane.showMessageDialog(this,"Error: "+e.getMessage(),"DatabaseError",JOptionPane.ERROR_MESSAGE);
+                    e.printStackTrace();
+                }
+            }
+        }
     private void updateTable(List<Expense> expenses){
         tableModel.setRowCount(0);
         for(Expense e:expenses){

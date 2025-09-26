@@ -12,10 +12,10 @@ import javax.xml.crypto.Data;
 
 public class MainDAO {
         private static final String SELECT_ALL_EXPENSE = "select * from expense order by expense_date desc";
-        private static final String INSERT_INTO = "INSERT INTO expense (category_id, amount, payment_method, note) VALUES (?, ?, ?, ?)";
+        private static final String INSERT_INTO = "INSERT INTO expense (category_id, amount, payment_method, expense_date, note) VALUES (?, ?, ?, ?, ?)";
         private static final String SELECT_EXPENSEID_BY_NAME = "SELECT category_id FROM category WHERE name = ?";
-        private static final String UPDATE_EXPENSE = "UPDATE expenses SET category_id=?, amount=?, payment_method=?, expense_at=?, note=? WHERE expense_id=?";
-        private static final String DELETE_EXPENSE = "DELETE FROM expenses WHERE expense_id=?";
+        private static final String UPDATE_EXPENSE = "UPDATE expense SET category_id=?, amount=?, payment_method=?, expense_date=?, note=? WHERE expense_id=?";
+        private static final String DELETE_EXPENSE = "DELETE FROM expense WHERE expense_id=?";
 
         private static final String SELECT_ALL_CATEGORY = "select * from category";
         private static final String INSERT_CATEGORY = "INSERT INTO category(name, description) VALUES (?, ?)";
@@ -42,7 +42,7 @@ public class MainDAO {
                         res.getInt("category_id"),
                         res.getDouble("amount"),
                         res.getString("payment_method"),
-                        res.getTimestamp("expense_date").toLocalDateTime(),
+                        res.getDate("expense_date").toLocalDate(),
                         res.getString("note")
                 );
             }
@@ -73,7 +73,8 @@ public class MainDAO {
                     stmt.setInt(1, expense.getCategoryId());
                     stmt.setDouble(2, expense.getAmount());
                     stmt.setString(3, expense.getPaymentMethod());
-                    stmt.setString(4, expense.getNote());
+                    stmt.setDate(4, Date.valueOf(expense.getExpenseAt()));
+                    stmt.setString(5, expense.getNote());
 
                     int rowsInserted = stmt.executeUpdate();
                     return rowsInserted > 0;
@@ -86,13 +87,13 @@ public class MainDAO {
         try (Connection conn = DatabaseConnection.getDBConnection();
              PreparedStatement stmt = conn.prepareStatement(UPDATE_EXPENSE)) {
 
-            stmt.setInt(1, expense.getCategoryId());
-            stmt.setString(2, expense.getPaymentMethod().toString());
-            stmt.setBigDecimal(3, BigDecimal.valueOf(expense.getAmount()));
-            stmt.setString(4, expense.getNote());
-            stmt.setTimestamp(5, Timestamp.valueOf(expense.getExpenseAt()));
-            stmt.setInt(6, expense.getExpenseId());
-
+            stmt.setInt(1, expense.getCategoryId());            
+            stmt.setDouble(2, expense.getAmount());
+            stmt.setString(3, expense.getPaymentMethod());
+            stmt.setDate(4, Date.valueOf(expense.getExpenseAt()));
+            stmt.setString(5, expense.getNote());
+            stmt.setInt(6, expense.getExpenseId()); 
+   
             return stmt.executeUpdate() > 0;
         }
     }

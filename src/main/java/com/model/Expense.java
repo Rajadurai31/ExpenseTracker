@@ -1,18 +1,18 @@
 package com.model;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public class Expense {
     private int expenseId;
     private int categoryId;
     private double amount;
     private String paymentMethod;
-    private LocalDateTime expenseAt;
+    private LocalDate expenseAt;
     private String note;
 
     public Expense(){
-        this.expenseAt = LocalDateTime.now();
+        this.expenseAt = LocalDate.now();
     }
-    public Expense(int expenseId, int categoryId, double amount, String paymentMethod, LocalDateTime expenseAt, String note) {
+    public Expense(int expenseId, int categoryId, double amount, String paymentMethod, LocalDate expenseAt, String note) {
         this.expenseId = expenseId;
         this.categoryId = categoryId;
         this.amount = amount;
@@ -20,8 +20,14 @@ public class Expense {
         this.paymentMethod = paymentMethod;
         this.note = note;
     }
-
-    public Expense(int categoryId, double amount, String paymentMethod, LocalDateTime expenseAt, String note) {
+    public Expense(int categoryId, double amount, String paymentMethod, String note) {
+        this.categoryId = categoryId;
+        this.amount = amount;
+        this.paymentMethod = paymentMethod;
+        this.note = note;
+        this.expenseAt = LocalDate.now();
+    }
+    public Expense(int categoryId, double amount, String paymentMethod, LocalDate expenseAt, String note) {
         this.categoryId = categoryId;
         this.amount = amount;
         this.paymentMethod = paymentMethod;
@@ -61,11 +67,11 @@ public class Expense {
         this.paymentMethod = paymentMethod;
     }
 
-    public LocalDateTime getExpenseAt() {
+    public LocalDate getExpenseAt() {
         return expenseAt;
     }
 
-    public void setExpenseAt() {
+    public void setExpenseAt(LocalDate expenseAt) {
         this.expenseAt = expenseAt;
     }
 
