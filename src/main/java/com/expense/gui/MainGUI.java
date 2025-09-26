@@ -230,6 +230,8 @@ class ExpenseGUI extends JFrame{
             JOptionPane.showMessageDialog(this,"Error: "+e.getMessage(),"DatabaseError",JOptionPane.ERROR_MESSAGE);
         }
     }
+
+
 //   private void updateExpense(){
 //        try {
 //            int row = expenseTable.getSelectedRow();
@@ -341,6 +343,7 @@ class CategoryGUI extends JFrame{
     private JButton addButton;
     private JButton updateButton;
     private JButton deleteButton;
+
     public CategoryGUI(){
         this.mainDAO = new MainDAO();
         initializeComponents();
@@ -405,13 +408,21 @@ class CategoryGUI extends JFrame{
         add(new JScrollPane(categoryTable), BorderLayout.CENTER);
     }
     private  void loadCategory(){
-        try
-        {
+        try {
             List<Category> categories = mainDAO.getAllCategory();
-            updateTable(categories);
-        }
-        catch(SQLException e){
-            JOptionPane.showMessageDialog(this, "Error loading expenses: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            tableModel.setRowCount(0); // Clear existing rows
+
+            categories.forEach(category -> {
+                Object[] row = {
+                        category.getCategoryId(),
+                        category.getName(),
+                        category.getDescription()
+                };
+                tableModel.addRow(row);
+            });
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error loading categories: " + e.getMessage(),
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
         }
     }
     private void updateTable(List<Category>  categories){
@@ -433,8 +444,93 @@ class CategoryGUI extends JFrame{
         }
     }
     private void setupEvenListeners(){
-//        addButton.addActionListener(e -> addCategory());
-//        updateButton.addActionListener(e -> updateCategory());
-//        deleteButton.addActionListener(e -> deleteCategory());
+        addButton.addActionListener(e -> addCategory());
+        updateButton.addActionListener(e -> updateCategory());
+        deleteButton.addActionListener(e -> deleteCategory());
     }
+    private void addCategory() {
+        String name = nameField.getText().trim();
+        String description = descriptionField.getText().trim();
+
+        if (name.isEmpty() || description.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill all the fields");
+            return;
+        }
+
+        try {
+            Category category = new Category(0, name, description); // ID will be set by database
+            int categoryId = mainDAO.createCategory(category);
+            if (categoryId > 0) {
+                JOptionPane.showMessageDialog(this, "Category added successfully!");
+                clearCategoryForm();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to add category");
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Database error: " + e.getMessage());
+        }
+    }
+    private void clearCategoryForm() {
+        nameField.setText("");
+        descriptionField.setText("");
+        loadCategory();
+    }
+    private void updateCategory() {
+        int row = categoryTable.getSelectedRow();
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a category to update");
+            return;
+        }
+
+        String name = nameField.getText().trim();
+        String description = descriptionField.getText().trim();
+
+        if (name.isEmpty() || description.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill all the fields");
+            return;
+        }
+
+        try {
+            int id = (int) categoryTable.getValueAt(row, 0);
+            Category category = new Category(id, name, description);
+            if (mainDAO.updateCategory(category)) {
+                JOptionPane.showMessageDialog(this, "Category updated successfully!");
+                loadCategory();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to update category");
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Update failed: " + e.getMessage());
+        }
+    }
+    private void deleteCategory() {
+        int row = categoryTable.getSelectedRow();
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a category to delete");
+            return;
+        }
+
+        int id = (int) categoryTable.getValueAt(row, 0);
+        String name = (String) categoryTable.getValueAt(row, 1);
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to delete category: " + name + "?",
+                "Confirm Delete",
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                Category category = new Category(id, name, "");
+                if (mainDAO.deleteCategory(category)) {
+                    JOptionPane.showMessageDialog(this, "Category deleted successfully!");
+                    loadCategory();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to delete category");
+                }
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(this, "Delete failed: " + e.getMessage());
+            }
+        }
+    }
+
 }

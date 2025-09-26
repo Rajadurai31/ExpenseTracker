@@ -1,4 +1,5 @@
 package com.expense.dao;
+import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -14,10 +15,14 @@ public class MainDAO {
         private static final String INSERT_INTO = "INSERT INTO expense (category_id, amount, payment_method, note) VALUES (?, ?, ?, ?)";
         private static final String SELECT_EXPENSEID_BY_NAME = "SELECT category_id FROM category WHERE name = ?";
         private static final String UPDATE_EXPENSE = "UPDATE expenses SET category_id=?, amount=?, payment_method=?, expense_at=?, note=? WHERE expense_id=?";
+        private static final String DELETE_EXPENSE = "DELETE FROM expenses WHERE expense_id=?";
 
-        private static final String SELECT_ALL_CATEGORY = "select * from category order by categoryId ";
+        private static final String SELECT_ALL_CATEGORY = "select * from category";
+        private static final String INSERT_CATEGORY = "INSERT INTO categories(name, description) VALUES (?, ?)";
+        private static final String UPDATE_CATEGORY = "UPDATE categories SET name=?, description=? WHERE category_id=?";
+        private static final String DELETE_CATEGORY = "DELETE FROM categories WHERE category_id=?";
 
-        public static int getCategoryIdByName(String categoryName) throws SQLException{
+    public static int getCategoryIdByName(String categoryName) throws SQLException{
              try(Connection conn = DatabaseConnection.getDBConnection();
              PreparedStatement stmt = conn.prepareStatement(SELECT_EXPENSEID_BY_NAME);){
                  stmt.setString(1,categoryName);
@@ -66,8 +71,8 @@ public class MainDAO {
                    ){
                     System.out.println("Connecting to database...");
                     stmt.setInt(1, expense.getCategoryId());
-                    stmt.setDouble(2, expense.getAmount());   // BigDecimal for DECIMAL
-                    stmt.setString(3, expense.getPaymentMethod()); // "Cash", "Online", "Card", "UPI"
+                    stmt.setDouble(2, expense.getAmount());
+                    stmt.setString(3, expense.getPaymentMethod());
                     stmt.setString(4, expense.getNote());
 
                     int rowsInserted = stmt.executeUpdate();
@@ -77,24 +82,54 @@ public class MainDAO {
                     return false;
                 }
         }
+    public boolean updateExpense(Expense expense) throws SQLException {
+        try (Connection conn = DatabaseConnection.getDBConnection();
+             PreparedStatement stmt = conn.prepareStatement(UPDATE_EXPENSE)) {
 
-    //    public boolean updateExpense(Expense expense) {
-    //        try (Connection conn = DatabaseConnection.getDBConnection();
-    //             PreparedStatement stmt = conn.prepareStatement(UPDATE_EXPENSE)) {
-    //            stmt.setInt(1, expense.getCategoryId());
-    //            stmt.setDouble(2, expense.getAmount());
-    //            stmt.setString(3, expense.getPaymentMethod());
-    //            stmt.setTimestamp(4, Timestamp.valueOf(expense.getExpenseAt()));
-    //            stmt.setString(5, expense.getNote());
-    //            stmt.setInt(6, expense.getExpenseId());
-    //            int row = stmt.executeUpdate();
-    //            return  row> 0;
-    //        } catch (SQLException e) {
-    //            e.printStackTrace();
-    //            return false;
-    //        }
-    //    }
+            stmt.setInt(1, expense.getCategoryId());
+            stmt.setString(2, expense.getPaymentMethod().toString());
+            stmt.setBigDecimal(3, BigDecimal.valueOf(expense.getAmount()));
+            stmt.setString(4, expense.getNote());
+            stmt.setTimestamp(5, Timestamp.valueOf(expense.getExpenseAt()));
+            stmt.setInt(6, expense.getExpenseId());
 
+            return stmt.executeUpdate() > 0;
+        }
+    }
+    public boolean deleteExpense(Expense expense) throws SQLException {
+        try (Connection conn = DatabaseConnection.getDBConnection();
+             PreparedStatement stmt = conn.prepareStatement(DELETE_EXPENSE)) {
+
+            stmt.setInt(1, expense.getExpenseId());
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+
+
+
+    public int createCategory(Category category) throws SQLException {
+
+        try (Connection conn = DatabaseConnection.getDBConnection();
+             PreparedStatement stmt = conn.prepareStatement(INSERT_CATEGORY, Statement.RETURN_GENERATED_KEYS)) {
+
+
+            stmt.setString(1, category.getName());
+            stmt.setString(2, category.getDescription());
+
+            int rows = stmt.executeUpdate();
+            if (rows <= 0) {
+                throw new SQLException("Error while inserting category");
+            }
+
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);               }
+            }
+        }
+        return -1;
+    }
         public List<Category> getAllCategory() throws SQLException {
             List<Category> categories = new ArrayList<>();
             try (Connection conn = DatabaseConnection.getDBConnection();
@@ -104,19 +139,41 @@ public class MainDAO {
                 System.out.println("Query executed successfully!");
                 while (res.next()) {
                     Category category = getCategoryRow(res);
-                    System.out.println(category);
                     categories.add(category);
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
             }
             return categories;
         }
+    public boolean updateCategory(Category category) throws SQLException {
 
-        private Category getCategoryRow(ResultSet res) throws SQLException {
+        try (Connection conn = DatabaseConnection.getDBConnection();
+             PreparedStatement stmt = conn.prepareStatement(UPDATE_CATEGORY)) {
+
+
+            stmt.setString(1, category.getName());
+            stmt.setString(2, category.getDescription());
+            stmt.setInt(3, category.getCategoryId());
+
+
+            return stmt.executeUpdate() > 0;
+        }
+    }
+    public boolean deleteCategory(Category category) throws SQLException {
+
+        try (Connection conn = DatabaseConnection.getDBConnection();
+             PreparedStatement stmt = conn.prepareStatement(DELETE_CATEGORY)) {
+
+
+            stmt.setInt(1, category.getCategoryId());
+
+
+            return stmt.executeUpdate() > 0;
+        }
+    }
+    private Category getCategoryRow(ResultSet res) throws SQLException {
             return new Category(
                     res.getInt("category_id"),
-                    res.getString("note"),
+                    res.getString("name"),
                     res.getString("description")
             );
         }
