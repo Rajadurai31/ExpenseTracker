@@ -8,11 +8,9 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Date;
+
 import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+
 
 public class MainGUI extends JFrame {
     private JPanel panel;
