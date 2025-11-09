@@ -11,6 +11,7 @@ public class Expense {
 
     public Expense(){
         this.expenseAt = LocalDate.now();
+        
     }
     public Expense(int expenseId, int categoryId, double amount, String paymentMethod, LocalDate expenseAt, String note) {
         this.expenseId = expenseId;
@@ -36,6 +37,7 @@ public class Expense {
     }
 
     public int getExpenseId() {
+
         return expenseId;
     }
 
