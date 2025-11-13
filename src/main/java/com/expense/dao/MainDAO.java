@@ -21,6 +21,7 @@ public class MainDAO {
         private static final String DELETE_CATEGORY = "DELETE FROM category WHERE category_id=?";
 
     public static int getCategoryIdByName(String categoryName) throws SQLException{
+        
              try(Connection conn = DatabaseConnection.getDBConnection();
              PreparedStatement stmt = conn.prepareStatement(SELECT_EXPENSEID_BY_NAME);){
                  stmt.setString(1,categoryName);
@@ -82,6 +83,7 @@ public class MainDAO {
                 }
         }
     public boolean updateExpense(Expense expense) throws SQLException {
+
         try (Connection conn = DatabaseConnection.getDBConnection();
              PreparedStatement stmt = conn.prepareStatement(UPDATE_EXPENSE)) {
 

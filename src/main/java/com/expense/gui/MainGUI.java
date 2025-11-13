@@ -229,11 +229,10 @@ class ExpenseGUI extends JFrame{
             if (success) {
                 JOptionPane.showMessageDialog(this, "Expense added successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
 
-                // Refresh table
+              
                 List<Expense> expenses = mainDAO.getAllExpense();
                 updateTable(expenses);
 
-                // Clear fields
                 amountField.setText("");
                 noteField.setText("");
                 dateField.setText(LocalDate.now().toString());
